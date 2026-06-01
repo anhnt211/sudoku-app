@@ -146,14 +146,14 @@ input:focus-visible,
   min-height: 100dvh;
   max-width: 520px;
   margin: 0 auto;
-  padding: env(safe-area-inset-top) 6px env(safe-area-inset-bottom);
+  padding: env(safe-area-inset-top) 4px env(safe-area-inset-bottom);
   background: var(--bg);
   gap: 4px;
 }
 
 /* ---------- Header ---------- */
 
-.header { flex: 0 0 auto; padding-top: 4px; }
+.header { flex: 0 0 auto; padding-top: 2px; }
 
 .header-top {
   display: flex;
@@ -192,7 +192,7 @@ input:focus-visible,
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 4px 2px;
+  padding: 4px 4px 0;
   font-size: 12px;
 }
 
@@ -243,7 +243,7 @@ input:focus-visible,
 
 /* Square board: shrink to fit available width OR available vertical room. */
 .board {
-  width: min(100%, calc(100dvh - 290px));
+  width: min(100%, calc(100dvh - 268px));
   aspect-ratio: 1 / 1;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
@@ -264,7 +264,7 @@ input:focus-visible,
   border-bottom: 1px solid var(--grid-line);
   transition: background-color 0.12s ease;
   cursor: pointer;
-  font-size: clamp(24px, 7.2vw, 34px);
+  font-size: clamp(28px, 8.6vw, 42px);
   line-height: 1;
 }
 
@@ -333,7 +333,7 @@ input:focus-visible,
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(100%, calc(100dvh - 290px));
+  width: min(100%, calc(100dvh - 268px));
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   background: color-mix(in srgb, var(--bg) 92%, transparent);
@@ -364,7 +364,7 @@ input:focus-visible,
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  padding: 6px 4px 0;
+  padding: 4px 4px 0;
 }
 
 .action {
@@ -374,7 +374,7 @@ input:focus-visible,
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 6px 4px;
+  padding: 4px 4px;
   border-radius: var(--radius-md);
   color: var(--action-icon);
   transition: background 0.15s ease;
@@ -423,13 +423,13 @@ input:focus-visible,
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 2px;
-  padding: 10px 0 4px;
+  padding: 6px 0 2px;
 }
 
 .pad-btn {
-  min-height: 58px;
-  font-size: clamp(30px, 8.5vw, 40px);
-  font-weight: 600;
+  min-height: 64px;
+  font-size: clamp(36px, 11vw, 52px);
+  font-weight: 700;
   color: var(--primary);
   border-radius: var(--radius-md);
   letter-spacing: -0.02em;
@@ -705,19 +705,19 @@ input:focus-visible,
 
 @media (max-height: 700px) {
   .header-stats { padding: 2px 4px; font-size: 11px; }
-  .action { min-height: 42px; padding: 4px; }
+  .action { min-height: 40px; padding: 3px; }
   .action-label { font-size: 10px; }
-  .cell { font-size: clamp(20px, 6vw, 28px); }
-  .pad-btn { min-height: 48px; font-size: clamp(24px, 7vw, 30px); }
-  .board { width: min(100%, calc(100dvh - 250px)); }
-  .board-overlay { width: min(100%, calc(100dvh - 250px)); }
+  .cell { font-size: clamp(24px, 8vw, 32px); }
+  .pad-btn { min-height: 54px; font-size: clamp(30px, 9.5vw, 40px); }
+  .board { width: min(100%, calc(100dvh - 234px)); }
+  .board-overlay { width: min(100%, calc(100dvh - 234px)); }
 }
 
 /* Landscape — keep the board centred and cap width. */
 @media (orientation: landscape) and (max-height: 500px) {
   .app { max-width: 800px; }
-  .cell { font-size: clamp(20px, 5vh, 30px); }
-  .pad-btn { min-height: 44px; font-size: clamp(22px, 6vh, 30px); }
-  .board { width: min(calc(100dvh - 220px), 100%); }
-  .board-overlay { width: min(calc(100dvh - 220px), 100%); }
+  .cell { font-size: clamp(22px, 6vh, 34px); }
+  .pad-btn { min-height: 44px; font-size: clamp(24px, 7vh, 34px); }
+  .board { width: min(calc(100dvh - 200px), 100%); }
+  .board-overlay { width: min(calc(100dvh - 200px), 100%); }
 }
