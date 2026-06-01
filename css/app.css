@@ -146,9 +146,9 @@ input:focus-visible,
   min-height: 100dvh;
   max-width: 520px;
   margin: 0 auto;
-  padding: env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+  padding: env(safe-area-inset-top) 6px env(safe-area-inset-bottom);
   background: var(--bg);
-  gap: 6px;
+  gap: 4px;
 }
 
 /* ---------- Header ---------- */
@@ -164,7 +164,7 @@ input:focus-visible,
 }
 
 .header-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -243,7 +243,7 @@ input:focus-visible,
 
 /* Square board: shrink to fit available width OR available vertical room. */
 .board {
-  width: min(100%, calc(100dvh - 280px));
+  width: min(100%, calc(100dvh - 290px));
   aspect-ratio: 1 / 1;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
@@ -264,7 +264,7 @@ input:focus-visible,
   border-bottom: 1px solid var(--grid-line);
   transition: background-color 0.12s ease;
   cursor: pointer;
-  font-size: clamp(18px, 5.5vw, 26px);
+  font-size: clamp(24px, 7.2vw, 34px);
   line-height: 1;
 }
 
@@ -277,9 +277,10 @@ input:focus-visible,
 }
 
 .cell-value {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--primary);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .cell.is-given .cell-value { color: var(--text); }
@@ -291,7 +292,8 @@ input:focus-visible,
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  font-size: clamp(8px, 2.2vw, 11px);
+  font-size: clamp(9px, 2.4vw, 12px);
+  font-weight: 500;
   color: var(--text-muted);
   line-height: 1;
 }
@@ -331,7 +333,7 @@ input:focus-visible,
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(100%, calc(100dvh - 280px));
+  width: min(100%, calc(100dvh - 290px));
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   background: color-mix(in srgb, var(--bg) 92%, transparent);
@@ -421,15 +423,16 @@ input:focus-visible,
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 2px;
-  padding: 8px 0 4px;
+  padding: 10px 0 4px;
 }
 
 .pad-btn {
-  min-height: 48px;
-  font-size: clamp(22px, 6vw, 28px);
+  min-height: 58px;
+  font-size: clamp(30px, 8.5vw, 40px);
   font-weight: 600;
   color: var(--primary);
   border-radius: var(--radius-md);
+  letter-spacing: -0.02em;
   transition: background 0.12s ease, transform 0.06s ease;
 }
 
@@ -704,14 +707,17 @@ input:focus-visible,
   .header-stats { padding: 2px 4px; font-size: 11px; }
   .action { min-height: 42px; padding: 4px; }
   .action-label { font-size: 10px; }
-  .pad-btn { min-height: 42px; font-size: 22px; }
-  .board { width: min(100%, calc(100dvh - 240px)); }
-  .board-overlay { width: min(100%, calc(100dvh - 240px)); }
+  .cell { font-size: clamp(20px, 6vw, 28px); }
+  .pad-btn { min-height: 48px; font-size: clamp(24px, 7vw, 30px); }
+  .board { width: min(100%, calc(100dvh - 250px)); }
+  .board-overlay { width: min(100%, calc(100dvh - 250px)); }
 }
 
 /* Landscape — keep the board centred and cap width. */
 @media (orientation: landscape) and (max-height: 500px) {
   .app { max-width: 800px; }
+  .cell { font-size: clamp(20px, 5vh, 30px); }
+  .pad-btn { min-height: 44px; font-size: clamp(22px, 6vh, 30px); }
   .board { width: min(calc(100dvh - 220px), 100%); }
   .board-overlay { width: min(calc(100dvh - 220px), 100%); }
 }
