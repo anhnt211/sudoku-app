@@ -1,6 +1,6 @@
 {
-  "name": "Sudoku",
-  "short_name": "Sudoku",
+  "name": "Sudoku-App",
+  "short_name": "Sudoku-App",
   "description": "Mobile-first Sudoku game with offline support.",
   "id": "/sudoku-app/",
   "start_url": "./index.html",
