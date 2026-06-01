@@ -1,6 +1,6 @@
 /* Sudoku service worker — offline-first cache. */
 
-const CACHE_VERSION = 'sudoku-v1.2.7';
+const CACHE_VERSION = 'sudoku-v1.2.8';
 const CORE_ASSETS = [
   './',
   './index.html',
