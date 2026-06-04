@@ -54,7 +54,7 @@ function main() {
   function handleAction(action, payload) {
     switch (action) {
       case 'select':
-        if (pendingHint) ui.hideHint();
+        if (pendingHint) ui.hideTutor();
         pendingHint = null;
         engine.select(payload);
         break;
@@ -96,17 +96,23 @@ function main() {
         if (!hint) return;
         engine.select(hint.cell);
         pendingHint = hint;
-        ui.showHint(hint);
+        ui.showTutor(hint);
         break;
       }
 
-      case 'apply-hint':
+      case 'tutor-cancel':
+        pendingHint = null;
+        break;
+
+      case 'apply-hint': {
+        const before = { completed: engine.state.completed };
         if (payload) engine.applyHint(payload);
         pendingHint = null;
         if (settings.get().haptics) vibrate(30);
         if (settings.get().sound) audio.play('tap');
-        if (engine.state.completed) finalizeWin();
+        if (!before.completed && engine.state.completed) finalizeWin();
         break;
+      }
 
       case 'pause':
         engine.togglePause();
@@ -149,7 +155,7 @@ function main() {
   function finalizeWin() {
     engine.stopTimer();
     const ms = engine.state.elapsedMs;
-    stats.recordWin({ timeMs: ms, score: engine.state.score });
+    stats.recordWin({ timeMs: ms, score: engine.state.score, difficulty: engine.state.difficulty });
     if (settings.get().haptics) vibrate([60, 40, 60, 40, 80]);
     if (settings.get().sound) audio.play('win');
     ui.openDialog('victory');

@@ -17,11 +17,12 @@
  */
 
 import { generatePuzzle, generatePuzzleAsync } from './sudoku-generator.js';
-import { idx, nextLogicalStep } from './sudoku-solver.js';
+import { idx } from './sudoku-solver.js';
+import { buildTutorHint } from './sudoku-hints.js';
 
 const MAX_MISTAKES = 3;
 const MAX_HISTORY = 500;
-const VALID_DIFFICULTIES = new Set(['easy', 'medium', 'hard', 'expert', 'extreme']);
+const VALID_DIFFICULTIES = new Set(['easy', 'medium', 'hard', 'expert', 'extreme', 'nightmare']);
 
 /**
  * @typedef {Object} EngineState
@@ -314,9 +315,9 @@ export class SudokuEngine {
    */
   hint() {
     if (this.state.gameOver || this.state.completed || this.state.paused) return null;
-    const step = nextLogicalStep(this.state.board);
-    if (step) return step;
-    return this._revealStep();
+    const tutor = buildTutorHint(this.state.board);
+    if (tutor) return tutor;
+    return this._revealTutor();
   }
 
   /** Apply the given hint: place the value, no mistake counted. */
@@ -338,14 +339,28 @@ export class SudokuEngine {
     this._emitState();
   }
 
-  _revealStep() {
+  _revealTutor() {
     for (let i = 0; i < 81; i++) {
       if (!this.state.board[i]) {
+        const v = this.state.solution[i];
+        const r = Math.floor(i / 9);
+        const c = i % 9;
+        const bx = Math.floor(r / 3) * 3 + Math.floor(c / 3);
         return {
-          cell: i,
-          value: this.state.solution[i],
+          title: '答えの表示',
           technique: 'reveal',
-          reason: '論理的に確定できる手が見つかりませんでした。答えを表示します。',
+          cell: i,
+          value: v,
+          steps: [{
+            title: '答えの表示',
+            explanation: '論理的に確定できる手が見つからなかったため、このマスの答えを表示します。',
+            highlightedCells: [i],
+            eliminatedCandidates: [],
+            targetCell: i,
+            row: r,
+            column: c,
+            box: bx,
+          }],
         };
       }
     }

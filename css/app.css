@@ -176,6 +176,11 @@ input:focus-visible,
 }
 
 .header-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
     "Segoe UI", system-ui, sans-serif;
   font-size: 22px;
@@ -184,6 +189,15 @@ input:focus-visible,
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
+
+.score-best {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+}
+
+.score-best:empty { display: none; }
 
 .header-actions { display: flex; gap: 4px; align-items: center; }
 
@@ -338,10 +352,16 @@ input:focus-visible,
 .cell.is-selected { background: var(--cell-selected); }
 .cell.is-same { background: var(--cell-same); }
 .cell.is-error { background: var(--cell-error); }
-.cell.is-hint {
-  outline: 2px solid var(--warn);
-  outline-offset: -2px;
+/* Tutor annotation layers — paint order: region → focus → elim → target. */
+.cell.anno-region { background: var(--cell-related); }
+.cell.anno-focus { background: var(--cell-selected); }
+.cell.anno-elim { background: var(--cell-error); }
+.cell.anno-elim .cell-value { color: var(--danger); }
+.cell.anno-target {
+  outline: 3px solid var(--warn);
+  outline-offset: -3px;
   background: var(--cell-hint);
+  z-index: 1;
 }
 
 .cell:active { filter: brightness(0.97); }
@@ -480,14 +500,14 @@ input:focus-visible,
   pointer-events: none;
 }
 
-/* ---------- Hint toast ---------- */
+/* ---------- Hint tutor (bottom sheet) ---------- */
 
-.hint-toast {
+.hint-tutor {
   position: fixed;
   left: 50%;
   bottom: calc(env(safe-area-inset-bottom) + 16px);
   transform: translateX(-50%) translateY(20px);
-  width: min(420px, calc(100% - 24px));
+  width: min(440px, calc(100% - 24px));
   background: var(--surface);
   color: var(--text);
   border-radius: var(--radius-lg);
@@ -500,34 +520,82 @@ input:focus-visible,
   pointer-events: auto;
 }
 
-.hint-toast.is-visible {
+.hint-tutor.is-visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
 
-.hint-toast .toast-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--primary);
-  text-transform: uppercase;
-  margin-bottom: 4px;
+.tutor-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-.hint-toast .toast-body {
+.tutor-title {
   font-size: 13px;
-  line-height: 1.45;
-  color: var(--text);
-  margin-bottom: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--primary);
 }
 
-.hint-toast .toast-action {
-  background: var(--primary);
-  color: #fff;
-  border-radius: 9999px;
-  padding: 8px 14px;
+.tutor-progress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim, var(--text));
+  opacity: 0.7;
+}
+
+.tutor-body { margin-bottom: 12px; }
+
+.tutor-explain {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.tutor-elim {
+  margin-top: 6px;
   font-size: 13px;
   font-weight: 600;
+  color: var(--danger);
+}
+
+.tutor-confirm {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tutor-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.tutor-btn {
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tutor-btn--ghost {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.tutor-btn--ghost:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.tutor-btn--primary {
+  background: var(--primary);
+  color: #fff;
 }
 
 /* ---------- Loading overlay ---------- */
@@ -664,6 +732,7 @@ input:focus-visible,
 }
 
 .diff-btn--accent { background: var(--primary); color: #fff; }
+.diff-btn--nightmare { background: #3b1d4a; color: #fff; }
 .diff-btn:active { filter: brightness(0.95); }
 
 /* iOS-style switch */

@@ -10,6 +10,15 @@ const THEME_COLORS = { light: '#ffffff', dark: '#0b1220' };
  */
 export function setupPWA() {
   if ('serviceWorker' in navigator) {
+    // When a new SW takes control (after SKIP_WAITING), reload once so the page
+    // runs the freshly-cached JS instead of the stale modules already in memory.
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
     window.addEventListener('load', () => {
       navigator.serviceWorker
         .register('./service-worker.js', { scope: './' })

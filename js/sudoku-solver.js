@@ -142,10 +142,15 @@ export function rateDifficulty(board) {
  *   - Tier 0–1 (singles only): medium with many singles, else easy.
  */
 function labelFor(score, maxTier, bruteForce) {
-  // Pure logical Extreme — XY-Wing, Swordfish, or harder.
-  if (maxTier >= 7) return 'extreme';
-  // Needs guessing → at minimum expert; extreme if it also used real techniques.
-  if (bruteForce) return maxTier >= 3 ? 'extreme' : 'expert';
+  // Hardest pure-logical rung — XY-Wing, Swordfish, or harder.
+  if (maxTier >= 7) return 'nightmare';
+  // Needs guessing → at minimum expert.
+  //   brute force layered on X-Wing (tier 6) is the reliable Nightmare catch-all;
+  //   brute force on real techniques (tier ≥ 3) is extreme; otherwise expert.
+  if (bruteForce) {
+    if (maxTier >= 6) return 'nightmare';
+    return maxTier >= 3 ? 'extreme' : 'expert';
+  }
   if (maxTier === 6) return score >= 2200 ? 'extreme' : 'expert';
   if (maxTier === 5) return score >= 2200 ? 'expert' : 'hard';
   if (maxTier === 4) return score >= 1800 ? 'expert' : 'hard';

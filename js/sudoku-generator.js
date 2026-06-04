@@ -19,7 +19,7 @@
 
 import { emptyBoard, candidatesAt, countSolutions, rateDifficulty } from './sudoku-solver.js';
 
-const DIFFICULTIES = ['easy', 'medium', 'hard', 'expert', 'extreme'];
+const DIFFICULTIES = ['easy', 'medium', 'hard', 'expert', 'extreme', 'nightmare'];
 
 /** Lower clue counts → harder puzzles. */
 const TARGET_CLUES = {
@@ -28,6 +28,7 @@ const TARGET_CLUES = {
   hard:    24,
   expert:  23,
   extreme: 22,
+  nightmare: 21,
 };
 
 /** Minimum logical tier the rater must have applied for the label to match.
@@ -40,11 +41,12 @@ const MIN_TIER = {
   hard:    2,   // at least locked candidates
   expert:  3,   // at least pairs (brute-force allowed for expert tier)
   extreme: 6,   // at least X-Wing (or brute-force, on extreme)
+  nightmare: 7, // XY-Wing / Swordfish (or brute-force layered on X-Wing)
 };
 
 /** Attempts per difficulty. Higher = better match, but slower. */
 const ATTEMPT_BUDGET = {
-  easy: 3, medium: 14, hard: 35, expert: 30, extreme: 50,
+  easy: 3, medium: 14, hard: 35, expert: 30, extreme: 50, nightmare: 60,
 };
 
 const rand = (n) => Math.floor(Math.random() * n);
@@ -142,7 +144,8 @@ function matchesRequest(candidate, requested, minTier) {
   if (candidate.difficulty !== requested) return false;
   if ((candidate.maxTier ?? 0) >= minTier) return true;
   // Brute-force-required puzzles are acceptable for expert+ tiers.
-  if (candidate.bruteForce && (requested === 'extreme' || requested === 'expert')) return true;
+  if (candidate.bruteForce
+    && (requested === 'extreme' || requested === 'expert' || requested === 'nightmare')) return true;
   return false;
 }
 

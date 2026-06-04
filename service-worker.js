@@ -1,6 +1,6 @@
 /* Sudoku service worker — offline-first cache. */
 
-const CACHE_VERSION = 'sudoku-v1.2.8';
+const CACHE_VERSION = 'sudoku-v1.3.1';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const CORE_ASSETS = [
   './js/sudoku-generator.js',
   './js/sudoku-solver.js',
   './js/sudoku-techniques.js',
+  './js/sudoku-hints.js',
   './js/ui.js',
   './js/storage.js',
   './js/settings.js',

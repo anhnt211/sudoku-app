@@ -24,7 +24,10 @@
         <button class="icon-btn" id="btn-new-game" aria-label="新しいゲーム" type="button">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
         </button>
-        <div class="header-title" id="score-display">0</div>
+        <div class="header-title" id="score-display">
+          <span class="score-current" id="score-current">0</span>
+          <span class="score-best" id="score-best"></span>
+        </div>
         <div class="header-actions">
           <button class="icon-btn" id="btn-theme" aria-label="テーマ切替" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36A5.4 5.4 0 0112 3z" fill="currentColor"/></svg>
@@ -104,8 +107,20 @@
 
   </main>
 
-  <!-- Hint toast -->
-  <div class="hint-toast" id="hint-toast" role="status" aria-live="polite" hidden></div>
+  <!-- Step-by-step hint tutor (bottom sheet — board stays visible for annotations) -->
+  <div class="hint-tutor" id="hint-tutor" role="dialog" aria-live="polite" aria-label="ヒント" hidden>
+    <div class="tutor-head">
+      <span class="tutor-title" id="tutor-title"></span>
+      <span class="tutor-progress" id="tutor-progress">1 / 1</span>
+    </div>
+    <div class="tutor-body" id="tutor-body"></div>
+    <div class="tutor-actions">
+      <button class="tutor-btn tutor-btn--ghost" id="tutor-prev" type="button">戻る</button>
+      <button class="tutor-btn tutor-btn--ghost" id="tutor-next" type="button">次へ</button>
+      <button class="tutor-btn tutor-btn--primary" id="tutor-done" type="button" hidden>入力する</button>
+      <button class="tutor-btn tutor-btn--ghost" id="tutor-close" type="button">閉じる</button>
+    </div>
+  </div>
 
   <!-- ARIA live region for status changes -->
   <div class="sr-only" id="live-region" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -147,6 +162,9 @@
       <h3 class="dialog-subtitle">統計</h3>
       <ul class="stats-list" id="stats-list"></ul>
 
+      <h3 class="dialog-subtitle">難易度別ベスト</h3>
+      <ul class="stats-list" id="stats-bydiff"></ul>
+
       <div class="dialog-actions">
         <button class="btn-secondary" id="btn-reset-stats" type="button">統計をリセット</button>
         <button class="btn-primary" id="btn-close-settings" type="button">閉じる</button>
@@ -163,6 +181,7 @@
         <li><button class="diff-btn" data-diff="hard" type="button">むずかしい</button></li>
         <li><button class="diff-btn" data-diff="expert" type="button">エキスパート</button></li>
         <li><button class="diff-btn diff-btn--accent" data-diff="extreme" type="button">エクストリーム</button></li>
+        <li><button class="diff-btn diff-btn--nightmare" data-diff="nightmare" type="button">ナイトメア</button></li>
       </ul>
       <div class="dialog-actions">
         <button class="btn-secondary" id="btn-close-new" type="button">キャンセル</button>

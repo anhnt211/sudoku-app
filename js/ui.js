@@ -16,6 +16,7 @@ const DIFF_LABELS = {
   hard: 'むずかしい',
   expert: 'エキスパート',
   extreme: 'エクストリーム',
+  nightmare: 'ナイトメア',
 };
 
 const TECHNIQUE_LABELS = {
@@ -54,14 +55,22 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
     boardOverlay: $('#board-overlay'),
     pad: $('#number-pad'),
     loading: $('#loading'),
-    toast: $('#hint-toast'),
+    tutor: $('#hint-tutor'),
+    tutorTitle: $('#tutor-title'),
+    tutorProgress: $('#tutor-progress'),
+    tutorBody: $('#tutor-body'),
+    tutorPrev: $('#tutor-prev'),
+    tutorNext: $('#tutor-next'),
+    tutorDone: $('#tutor-done'),
+    tutorClose: $('#tutor-close'),
     liveRegion: $('#live-region'),
 
     statDifficulty: $('#stat-difficulty'),
     statMistakes: $('#stat-mistakes'),
     statTime: $('#stat-time'),
     statTotal: $('#stat-total'),
-    score: $('#score-display'),
+    scoreCurrent: $('#score-current'),
+    scoreBest: $('#score-best'),
 
     btnUndo: $('#btn-undo'),
     btnErase: $('#btn-erase'),
@@ -89,6 +98,7 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
     optHaptics: $('#opt-haptics'),
 
     statsList: $('#stats-list'),
+    statsByDiff: $('#stats-bydiff'),
     btnResetStats: $('#btn-reset-stats'),
     btnCloseSettings: $('#btn-close-settings'),
     btnCloseNew: $('#btn-close-new'),
@@ -182,6 +192,15 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
   refs.btnRestart.addEventListener('click', () => { closeDialog(); onAction('restart'); });
   refs.btnNewAfterOver.addEventListener('click', () => openDialog('new'));
   refs.btnNewAfterWin.addEventListener('click', () => openDialog('new'));
+
+  refs.tutorPrev.addEventListener('click', () => tutorNav(-1));
+  refs.tutorNext.addEventListener('click', () => tutorNav(1));
+  refs.tutorClose.addEventListener('click', () => { hideTutor(); onAction('tutor-cancel'); });
+  refs.tutorDone.addEventListener('click', () => {
+    const t = tutor;
+    if (t) onAction('apply-hint', { cell: t.cell, value: t.value });
+    hideTutor();
+  });
 
   $$('.diff-btn').forEach((btn) => {
     btn.addEventListener('click', () => onAction('new', btn.dataset.diff));
@@ -279,10 +298,35 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
     empties: -1,
   };
 
-  let activeHint = null;
+  /** Active tutor hint + current step index (drives board annotations). */
+  let tutor = null;
+  let tutorStep = 0;
+
+  /** Cells belonging to the step's row/column/box context (region highlight). */
+  function regionCells(step) {
+    if (!step) return null;
+    const set = new Set();
+    if (step.row != null) for (let c = 0; c < 9; c++) set.add(step.row * 9 + c);
+    if (step.column != null) for (let r = 0; r < 9; r++) set.add(r * 9 + step.column);
+    if (step.box != null) {
+      const br = Math.floor(step.box / 3) * 3;
+      const bc = (step.box % 3) * 3;
+      for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) set.add((br + a) * 9 + (bc + b));
+    }
+    return set;
+  }
 
   function render(state) {
     const s = state || engine.state;
+
+    // Tutor annotation layers for the active step (region → focus → elim → target).
+    const step = tutor ? tutor.steps[tutorStep] : null;
+    const annoRegion = regionCells(step);
+    const annoFocus = step && step.highlightedCells ? new Set(step.highlightedCells) : null;
+    const annoElim = step && step.eliminatedCandidates && step.eliminatedCandidates.length
+      ? new Set(step.eliminatedCandidates.map((e) => (typeof e === 'number' ? e : e.cell)))
+      : null;
+    const annoTarget = step && step.targetCell != null ? step.targetCell : -1;
 
     // Header.
     if (s.difficulty !== prev.difficulty) {
@@ -295,7 +339,7 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
       prev.mistakes = s.mistakes;
     }
     if (s.score !== prev.score) {
-      refs.score.textContent = String(s.score || 0);
+      refs.scoreCurrent.textContent = String(s.score || 0);
       prev.score = s.score;
     }
 
@@ -364,7 +408,6 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
       const isRelated = sel >= 0 && !isSelected && (r === selRow || col === selCol || box === selBox);
       const isSame = highlightSame && selValue !== 0 && v === selValue && !isSelected;
       const isError = !s.givens[i] && v !== 0 && v !== s.solution[i];
-      const isHint = activeHint && activeHint.cell === i;
 
       c.root.classList.toggle('is-given', s.givens[i]);
       c.root.classList.toggle('is-user', !s.givens[i] && v !== 0);
@@ -372,7 +415,10 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
       c.root.classList.toggle('is-related', isRelated);
       c.root.classList.toggle('is-same', isSame);
       c.root.classList.toggle('is-error', isError);
-      c.root.classList.toggle('is-hint', !!isHint);
+      c.root.classList.toggle('anno-region', !!(annoRegion && annoRegion.has(i)));
+      c.root.classList.toggle('anno-focus', !!(annoFocus && annoFocus.has(i)));
+      c.root.classList.toggle('anno-elim', !!(annoElim && annoElim.has(i)));
+      c.root.classList.toggle('anno-target', i === annoTarget);
 
       // Update aria label when value changes.
       if (v !== prev.values[i] || isSelected) {
@@ -406,6 +452,12 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
     refs.statTotal.textContent = formatNumber(statsState.totalScore || 0);
   }
 
+  /** Header best-score line: shows "ベスト N" once a high score exists. */
+  function renderHighScore(statsState) {
+    const high = statsState.highScore || 0;
+    refs.scoreBest.textContent = high > 0 ? `ベスト ${formatNumber(high)}` : '';
+  }
+
   function renderSettingsDialog() {
     const s = settings.get();
     refs.optDark.checked = !!s.dark;
@@ -414,6 +466,7 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
     refs.optAutoNotes.checked = !!s.autoRemoveNotes;
     refs.optHaptics.checked = !!s.haptics;
     renderStatsList();
+    renderStatsByDiff();
   }
 
   function renderStatsList() {
@@ -428,6 +481,7 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
       ['平均タイム', avg ? formatTime(avg) : '—'],
       ['現在の連勝', st.currentStreak],
       ['最長連勝', st.longestStreak],
+      ['最高スコア', formatNumber(st.highScore || 0)],
       ['通算スコア', formatNumber(st.totalScore || 0)],
     ];
     refs.statsList.innerHTML = rows
@@ -435,38 +489,82 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
       .join('');
   }
 
+  /** Per-difficulty best score + fastest time. */
+  function renderStatsByDiff() {
+    const st = stats.get();
+    const order = ['easy', 'medium', 'hard', 'expert', 'extreme', 'nightmare'];
+    const bestScore = st.bestScoreByDiff || {};
+    const fastest = st.fastestByDiff || {};
+    refs.statsByDiff.innerHTML = order
+      .map((d) => {
+        const score = bestScore[d] ? formatNumber(bestScore[d]) : '—';
+        const time = fastest[d] != null ? formatTime(fastest[d]) : '—';
+        const label = DIFF_LABELS[d] || d;
+        return `<li><span>${escapeHTML(label)}</span><strong>${escapeHTML(score)} / ${escapeHTML(time)}</strong></li>`;
+      })
+      .join('');
+  }
+
   /* ---------- Side effects (hint toast, loading, mistakes) ---------- */
 
-  function showHint(hint) {
-    activeHint = hint;
-    const chainLabels = (hint.chain && hint.chain.length)
-      ? hint.chain.map((l) => TECHNIQUE_LABELS[l] || l)
-      : [TECHNIQUE_LABELS[hint.technique] || hint.technique];
-    const title = chainLabels.join(' → ');
-    refs.toast.innerHTML = `
-      <div class="toast-title">${escapeHTML(title)}</div>
-      <div class="toast-body">${escapeHTML(hint.reason)}</div>
-      <button class="toast-action" type="button" id="toast-apply">答えを入れる</button>
-    `;
-    refs.toast.hidden = false;
-    refs.toast.classList.add('is-visible');
-    announce(`ヒント: ${hint.reason}`);
+  /** Open the step-by-step tutor for a hint object. */
+  function showTutor(hint) {
+    if (!hint || !hint.steps || !hint.steps.length) return;
+    tutor = hint;
+    tutorStep = 0;
+    const label = TECHNIQUE_LABELS[hint.technique] || hint.title || hint.technique;
+    refs.tutorTitle.textContent = label;
+    refs.tutor.hidden = false;
+    refs.tutor.classList.add('is-visible');
+    renderTutor();
+  }
 
-    const apply = refs.toast.querySelector('#toast-apply');
-    if (apply) apply.addEventListener('click', () => {
-      onAction('apply-hint', hint);
-      hideHint();
-    });
-
-    clearTimeout(showHint._t);
-    showHint._t = setTimeout(hideHint, 8000);
+  function hideTutor() {
+    tutor = null;
+    tutorStep = 0;
+    refs.tutor.classList.remove('is-visible');
+    setTimeout(() => { refs.tutor.hidden = true; }, 200);
     render();
   }
 
-  function hideHint() {
-    activeHint = null;
-    refs.toast.classList.remove('is-visible');
-    setTimeout(() => { refs.toast.hidden = true; }, 200);
+  /** Step backward/forward within the active tutor. */
+  function tutorNav(delta) {
+    if (!tutor) return;
+    const next = tutorStep + delta;
+    if (next < 0 || next >= tutor.steps.length) return;
+    tutorStep = next;
+    renderTutor();
+  }
+
+  /** Paint the current tutor step into the bottom sheet + refresh annotations. */
+  function renderTutor() {
+    if (!tutor) return;
+    const total = tutor.steps.length;
+    const step = tutor.steps[tutorStep];
+    const isLast = tutorStep === total - 1;
+
+    refs.tutorProgress.textContent = `${tutorStep + 1} / ${total}`;
+
+    let body = `<p class="tutor-explain">${escapeHTML(step.explanation || '')}</p>`;
+    if (step.eliminatedCandidates && step.eliminatedCandidates.length) {
+      const digits = step.eliminatedCandidates
+        .map((e) => (typeof e === 'number' ? null : e.value))
+        .filter((d) => d != null);
+      if (digits.length) {
+        const uniq = Array.from(new Set(digits)).sort((a, b) => a - b);
+        body += `<p class="tutor-elim">候補から除外: ${uniq.map(String).join('・')}</p>`;
+      }
+    }
+    if (isLast && tutor.value) {
+      body += `<p class="tutor-confirm">このマスに数字を入力しますか？</p>`;
+    }
+    refs.tutorBody.innerHTML = body;
+
+    refs.tutorPrev.disabled = tutorStep === 0;
+    refs.tutorNext.hidden = isLast;
+    refs.tutorDone.hidden = !isLast;
+
+    announce(`ヒント ${tutorStep + 1} / ${total}: ${step.explanation || ''}`);
     render();
   }
 
@@ -495,13 +593,14 @@ export function createUI({ engine, settings, stats, onAction, pwa }) {
   engine.subscribe(render);
   engine.subscribeTick(renderTick);
   settings.subscribe(() => { applyTheme(); render(); renderSettingsDialog(); });
-  stats.subscribe((s) => { renderTotals(s); renderStatsList(); });
+  stats.subscribe((s) => { renderTotals(s); renderHighScore(s); renderStatsList(); renderStatsByDiff(); });
 
   applyTheme();
   render();
   renderTotals(stats.get());
+  renderHighScore(stats.get());
 
-  return { showHint, hideHint, flashMistake, showLoading, announce, openDialog, closeDialog };
+  return { showTutor, hideTutor, flashMistake, showLoading, announce, openDialog, closeDialog };
 }
 
 /* ---------- Helpers ---------- */
